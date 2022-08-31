@@ -10,7 +10,7 @@ import { loadWalletKey } from '../../utils';
 import { distributeCreatorTokens } from './functions/solana';
 
 const commitment: Commitment = 'confirmed';
-const network = 'https://api.mainnet-beta.solana.com';
+const network = 'https://ssc-dao.genesysgo.net/';
 const opts = {
   commitment,
   confirmTransactionInitialTimeout: 2 * 60 * 1000,
