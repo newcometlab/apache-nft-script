@@ -3,7 +3,7 @@ import { addTransactions, connectSqlite, getLastTxn, getTransaction, updateLastT
 import { getMagicEdenTransactions } from './functions/services';
 import { ResponseTxnObj, BResponseTxnObj, BTxnObj } from './functions/types';
 
-import { Commitment } from "@solana/web3.js"
+import { Commitment, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import * as anchor from "@project-serum/anchor";
 import { SplTokenBonding } from "@strata-foundation/spl-token-bonding";
 import { loadWalletKey } from '../../utils';
@@ -137,8 +137,8 @@ export default async function handler(
           wallet,
           tokenBondingSdk,
           new anchor.web3.PublicKey(txn.buyer),
-          0.01,
-          0.01,
+          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(3 * 10).toNumber() / LAMPORTS_PER_SOL,
+          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(3 * 10).toNumber() / LAMPORTS_PER_SOL,
         );
       } catch (error) {
         console.log(error, `solana error for txn: ${txn.signature}`);
