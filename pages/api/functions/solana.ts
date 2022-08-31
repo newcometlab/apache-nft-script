@@ -11,11 +11,14 @@ const mintLOGOS = new PublicKey('7vb3kEPGkR1qCqQr3a4cNdLT6svrFpaxZqfY53L1LM5J');
 export const distributeCreatorTokens = async (
 	connection: Connection,
 	wallet: anchor.Wallet,
-	tokenBondingSdk: SplTokenBonding,
+	provider: anchor.AnchorProvider,
 	buyer: PublicKey,
 	amount_1: number,
 	amount_2: number,
 ) => {
+	anchor.setProvider(provider);
+	const tokenBondingSdk = await SplTokenBonding.init(provider);
+
 	const { targetAmount: targetRVTKAmount } = await tokenBondingSdk.swap({
 		baseMint: NATIVE_MINT,
 		targetMint: mintRVTK,

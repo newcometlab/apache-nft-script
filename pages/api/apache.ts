@@ -66,23 +66,20 @@ export default async function handler(
           }
         }
         if (isExisting) {
-          const _1stTxns = magdenTxns.filter(txn => txn.blockTime > _blockTime);
-          const _2ndTxns = magdenTxns.filter(txn => txn.blockTime === _blockTime);
+          const _1stTxns = magdenTxns.filter(txn => txn.blockTime >= _blockTime);
   
-          let _3rdTxns: Array<ResponseTxnObj> = [];
+          let _2ndTxns: Array<BResponseTxnObj> = [];
           await Promise.all(
-            _2ndTxns.map(async _ndTxn => {
-              const txn = await getTransaction(_ndTxn.signature);
-              if (txn === null || txn.isDistributed === false) {
-                _3rdTxns.push(_ndTxn);
+            _1stTxns.map(async _stTxn => {
+              const txn = await getTransaction(_stTxn.signature);
+              if (txn === null) {
+                _2ndTxns.push({ ..._stTxn, isNew: true });
+              } else if (txn !== null && txn.isDistributed === false) {
+                _2ndTxns.push({ ..._stTxn, isNew: false });
               }
             })
           );
-          allMagdenTxns = allMagdenTxns.concat(
-            _1stTxns.map(txn => { return { ...txn, isNew: true }; })
-          ).concat(
-            _3rdTxns.map(txn => { return { ...txn, isNew: false }; })
-          );
+          allMagdenTxns = allMagdenTxns.concat(_2ndTxns);
           pageNum = 100;
         } else {
           pageNum++;
@@ -102,6 +99,7 @@ export default async function handler(
     res.status(200).json({
       data: 'magiceden api error'
     });
+    return;
   }
 
   console.log(allMagdenTxns.length, 'allMagdenTxns');
@@ -109,16 +107,14 @@ export default async function handler(
     timenow = Math.round(Date.now() / 1000);
     console.log(`========================= API ended at ${timenow} =========================\n`);
 
-    res.status(200).json({ data: 'nothing to add' }); return;
+    res.status(200).json({ data: 'nothing to add' });
+    return;
   }
 
 
   const walletKeypair = loadWalletKey('files/id.json');
   const wallet = new anchor.Wallet(walletKeypair);
   const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
-  anchor.setProvider(provider);
-
-  const tokenBondingSdk = await SplTokenBonding.init(provider);
 
   let bTxnObjs: Array<BTxnObj> = [];
   let i = 0; isPromiseEnded = true;
@@ -135,20 +131,13 @@ export default async function handler(
         ret = await distributeCreatorTokens(
           connection,
           wallet,
-          tokenBondingSdk,
+          provider,
           new anchor.web3.PublicKey(txn.buyer),
           (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(3 * 10).toNumber() / LAMPORTS_PER_SOL,
           (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(3 * 10).toNumber() / LAMPORTS_PER_SOL,
         );
       } catch (error) {
         console.log(error, `solana error for txn: ${txn.signature}`);
-
-        timenow = Math.round(Date.now() / 1000);
-        console.log(`========================= API ended at ${timenow} =========================\n`);
-
-        res.status(200).json({
-          data: 'magiceden api error'
-        });
       }
 
       bTxnObjs.push({
@@ -164,8 +153,8 @@ export default async function handler(
   }
 
   const nTxnObjs = bTxnObjs.filter(txn => txn.isNew);
-  const uTxnObjs = bTxnObjs.filter(txn => !txn.isNew);
-  
+  const uTxnObjs = bTxnObjs.filter(txn => !txn.isNew && txn.isDistributed);
+
   if (nTxnObjs.length > 0) {
     await addTransactions(nTxnObjs);
   }
@@ -173,9 +162,17 @@ export default async function handler(
     await updateTransactions(uTxnObjs.map(txn => { return txn.txnid; }));
   }
 
-  const _lastTxn = bTxnObjs[bTxnObjs.length - 1];
+  let _lastTxn = null;
+  for (i = 0; i < bTxnObjs.length; i++) {
+    if (bTxnObjs[bTxnObjs.length - 1 - i].isDistributed === true) {
+      _lastTxn = bTxnObjs[bTxnObjs.length - 1 - i];
+      break;
+    }
+  }
 
-  await updateLastTxn(_lastTxn.txnid, _lastTxn.blockTime);
+  if (_lastTxn !== null) {
+    await updateLastTxn(_lastTxn.txnid, _lastTxn.blockTime);
+  }
 
   timenow = Math.round(Date.now() / 1000);
   console.log(`========================= API ended at ${timenow} =========================\n`);
