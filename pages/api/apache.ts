@@ -132,8 +132,8 @@ export default async function handler(
           wallet,
           provider,
           new anchor.web3.PublicKey(txn.buyer),
-          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(40 * 10).toNumber() / LAMPORTS_PER_SOL,
-          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(40 * 10).toNumber() / LAMPORTS_PER_SOL,
+          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).muln(375).divn(100000).toNumber() / LAMPORTS_PER_SOL,
+          // (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(40 * 10).toNumber() / LAMPORTS_PER_SOL,
         );
       } catch (error) {
         console.log(error, `solana error for txn: ${txn.signature}`);
