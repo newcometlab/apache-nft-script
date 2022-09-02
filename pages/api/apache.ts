@@ -8,14 +8,16 @@ import * as anchor from "@project-serum/anchor";
 import { loadWalletKey } from '../../utils';
 import { distributeCreatorTokens } from './functions/solana';
 
+const percentage = Number(process.env?.NEXT_PUBLIC_DISTRIBITION_PERCENTAGE || 3750);
+const rpcEndpoint = process.env?.NEXT_PUBLIC_RPC_ENDPOINT || 'https://ssc-dao.genesysgo.net/';
+
 const commitment: Commitment = 'confirmed';
-const network = 'https://ssc-dao.genesysgo.net/';
 const opts = {
   commitment,
   confirmTransactionInitialTimeout: 2 * 60 * 1000,
   disableRetryOnRateLimit: false,
 };
-const connection = new anchor.web3.Connection(network, opts);
+const connection = new anchor.web3.Connection(rpcEndpoint, opts);
 
 type Data = {
   data: string
@@ -132,8 +134,7 @@ export default async function handler(
           wallet,
           provider,
           new anchor.web3.PublicKey(txn.buyer),
-          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).muln(375).divn(100000).toNumber() / LAMPORTS_PER_SOL,
-          // (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).divn(40 * 10).toNumber() / LAMPORTS_PER_SOL,
+          (new anchor.BN(txn.price * LAMPORTS_PER_SOL)).muln(percentage).divn(100000).toNumber() / LAMPORTS_PER_SOL,
         );
       } catch (error) {
         console.log(error, `solana error for txn: ${txn.signature}`);

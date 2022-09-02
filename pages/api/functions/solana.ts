@@ -5,8 +5,9 @@ import { getAssociatedAccountBalance } from "@strata-foundation/spl-utils";
 import * as splToken from "@solana/spl-token";
 const { NATIVE_MINT } = splToken;
 
-const mintRVTK = new PublicKey('51rN6ZcERwNtYvtubCwWn1pQDDfQpot6niYxwXnEurQJ');
-// const mintLOGOS = new PublicKey('7vb3kEPGkR1qCqQr3a4cNdLT6svrFpaxZqfY53L1LM5J');
+const strMintRVTK = process.env?.NEXT_PUBLIC_RPC_ENDPOINT || '51rN6ZcERwNtYvtubCwWn1pQDDfQpot6niYxwXnEurQJ';
+
+const mintRVTK = new PublicKey(strMintRVTK);
 
 export const distributeCreatorTokens = async (
 	connection: Connection,
@@ -14,7 +15,6 @@ export const distributeCreatorTokens = async (
 	provider: anchor.AnchorProvider,
 	buyer: PublicKey,
 	amount_1: number,
-	// amount_2: number,
 ) => {
 	anchor.setProvider(provider);
 	const tokenBondingSdk = await SplTokenBonding.init(provider);
@@ -33,20 +33,6 @@ export const distributeCreatorTokens = async (
 	);
 	console.log(rvtkBalance, 'rvtkBalance');
 
-	// const { targetAmount: targetLogosAmount } = await tokenBondingSdk.swap({
-	// 	baseMint: NATIVE_MINT,
-	// 	targetMint: mintLOGOS,
-	// 	baseAmount: amount_2,
-	// 	slippage: 0.05,
-	// });
-	// console.log(targetLogosAmount, 'targetLogosAmount');
-	// const logosBalance = await getAssociatedAccountBalance(
-	// 	connection,
-	// 	wallet.publicKey,
-	// 	mintRVTK
-	// );
-	// console.log(logosBalance, 'logosBalance');
-
 	const srcRVTK = await getAssociateTokenAccount(mintRVTK, wallet.publicKey);
 	const destRVTK = await getOrCreateAssociateTokenAccount(connection, mintRVTK, wallet, buyer);
 
@@ -61,20 +47,6 @@ export const distributeCreatorTokens = async (
 			targetRVTKAmount * LAMPORTS_PER_SOL
 		)
 	);
-
-	// const srcLOGOS = await getAssociateTokenAccount(mintLOGOS, wallet.publicKey);
-	// const destLOGOS = await getOrCreateAssociateTokenAccount(connection, mintLOGOS, wallet, buyer);
-
-	// instructions.push(
-	// 	splToken.Token.createTransferInstruction(
-	// 		splToken.TOKEN_PROGRAM_ID,
-	// 		srcLOGOS,
-	// 		destLOGOS,
-	// 		wallet.publicKey,
-	// 		[],
-	// 		targetLogosAmount * LAMPORTS_PER_SOL
-	// 	)
-	// );
 
 	await sendTransaction(connection, wallet, instructions);
 
