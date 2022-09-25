@@ -5,7 +5,7 @@ import { getAssociatedAccountBalance } from "@strata-foundation/spl-utils";
 import * as splToken from "@solana/spl-token";
 const { NATIVE_MINT } = splToken;
 
-const strMintRVTK = process.env?.NEXT_PUBLIC_RPC_ENDPOINT || '51rN6ZcERwNtYvtubCwWn1pQDDfQpot6niYxwXnEurQJ';
+const strMintRVTK = process.env?.NEXT_PUBLIC_MINT_RVTK || '51rN6ZcERwNtYvtubCwWn1pQDDfQpot6niYxwXnEurQJ';
 
 const mintRVTK = new PublicKey(strMintRVTK);
 
